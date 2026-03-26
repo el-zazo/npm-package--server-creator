@@ -1,0 +1,13 @@
+{
+  "name": "@el-zazo/server-creator-gui",
+  "version": "0.0.1",
+  "description": "GUI for configuring @el-zazo/server-creator",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "express": "^5.1.0"
+  }
+}

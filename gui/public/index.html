@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Server Creator GUI</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Server Creator GUI</h1>
+      <p>Configure your @el-zazo/server-creator package</p>
+    </header>
+
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="database">Database</button>
+      <button class="tab-btn" data-tab="collections">Collections</button>
+      <button class="tab-btn" data-tab="server">Server</button>
+      <button class="tab-btn" data-tab="auth">Authentication</button>
+      <button class="tab-btn" data-tab="routes">Custom Routes</button>
+      <button class="tab-btn" data-tab="preview">Preview & Export</button>
+    </div>
+
+    <form id="configForm">
+      <div class="tab-content active" id="database">
+        <div class="form-group">
+          <label for="dbType">Database Type</label>
+          <select id="dbType" name="dbType">
+            <option value="mongodb">MongoDB</option>
+            <option value="mysql">MySQL</option>
+          </select>
+        </div>
+
+        <div id="mongodbConfig" class="db-config">
+          <h3>MongoDB Configuration</h3>
+          <div class="form-group">
+            <label for="mongodbUri">Connection URI</label>
+            <input type="text" id="mongodbUri" name="mongodb.uri" value="mongodb://localhost:27017/myapp" placeholder="mongodb://localhost:27017/myapp">
+          </div>
+          
+          <div class="form-group checkbox-group">
+            <label>
+              <input type="checkbox" id="mongodbCacheEnabled" name="mongodb.cacheEnabled">
+              Enable Caching
+            </label>
+          </div>
+          
+          <div id="mongodbCacheOptions" class="hidden">
+            <div class="form-group">
+              <label for="mongodbCacheTtl">Cache TTL (ms)</label>
+              <input type="number" id="mongodbCacheTtl" name="mongodb.cacheTtl" value="300000">
+            </div>
+            <div class="form-group">
+              <label for="mongodbCacheMaxSize">Cache Max Size</label>
+              <input type="number" id="mongodbCacheMaxSize" name="mongodb.cacheMaxSize" value="100">
+            </div>
+          </div>
+        </div>
+
+        <div id="mysqlConfig" class="db-config hidden">
+          <h3>MySQL Configuration</h3>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="mysqlHost">Host</label>
+              <input type="text" id="mysqlHost" name="mysql.host" value="localhost">
+            </div>
+            <div class="form-group">
+              <label for="mysqlPort">Port</label>
+              <input type="number" id="mysqlPort" name="mysql.port" value="3306">
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="mysqlDatabase">Database Name</label>
+            <input type="text" id="mysqlDatabase" name="mysql.database" value="myapp">
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="mysqlUsername">Username</label>
+              <input type="text" id="mysqlUsername" name="mysql.username" value="root">
+            </div>
+            <div class="form-group">
+              <label for="mysqlPassword">Password</label>
+              <input type="password" id="mysqlPassword" name="mysql.password" value="">
+            </div>
+          </div>
+          
+          <div class="form-group checkbox-group">
+            <label>
+              <input type="checkbox" id="mysqlCacheEnabled" name="mysql.cacheEnabled">
+              Enable Caching
+            </label>
+          </div>
+          
+          <div id="mysqlCacheOptions" class="hidden">
+            <div class="form-group">
+              <label for="mysqlCacheTtl">Cache TTL (ms)</label>
+              <input type="number" id="mysqlCacheTtl" name="mysql.cacheTtl" value="300000">
+            </div>
+            <div class="form-group">
+              <label for="mysqlCacheMaxSize">Cache Max Size</label>
+              <input type="number" id="mysqlCacheMaxSize" name="mysql.cacheMaxSize" value="100">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tab-content" id="collections">
+        <h3>Collections / Tables Configuration</h3>
+        <p class="help-text">Configure your database collections (MongoDB) or tables (MySQL)</p>
+        
+        <div id="collectionsList">
+          <div class="collection-item" data-index="0">
+            <div class="collection-header">
+              <h4>Collection #1</h4>
+              <button type="button" class="btn-remove" onclick="removeCollection(this)">Remove</button>
+            </div>
+            
+            <div class="form-group">
+              <label>Collection/Table Name</label>
+              <input type="text" name="collections[0].name" placeholder="e.g., users, products" class="collection-name">
+            </div>
+            
+            <div class="form-group checkbox-group">
+              <label>
+                <input type="checkbox" name="collections[0].enabled" checked>
+                Enabled
+              </label>
+            </div>
+            
+            <div class="form-group">
+              <label>API Prefix</label>
+              <input type="text" name="collections[0].prefix" placeholder="/api/users (default: /collectionName)">
+            </div>
+            
+            <div class="form-group">
+              <label>Fields Configuration (for response filtering)</label>
+              <p class="help-text-small">Format: fieldName:1 (include) or fieldName:0 (exclude)</p>
+              <div class="fields-config">
+                <div class="field-row">
+                  <input type="text" name="collections[0].fields[0].name" placeholder="field name">
+                  <select name="collections[0].fields[0].value">
+                    <option value="1">Include (1)</option>
+                    <option value="0">Exclude (0)</option>
+                  </select>
+                  <button type="button" class="btn-icon" onclick="addFieldRow(this)">+</button>
+                </div>
+              </div>
+            </div>
+            
+            <div class="form-group">
+              <label>Routes to Enable</label>
+              <div class="checkbox-group-inline wrap">
+                <label><input type="checkbox" name="collections[0].routes" value="getAll" checked> Get All</label>
+                <label><input type="checkbox" name="collections[0].routes" value="getOneById" checked> Get One</label>
+                <label><input type="checkbox" name="collections[0].routes" value="search" checked> Search</label>
+                <label><input type="checkbox" name="collections[0].routes" value="addOne" checked> Add One</label>
+                <label><input type="checkbox" name="collections[0].routes" value="addMany"> Add Many</label>
+                <label><input type="checkbox" name="collections[0].routes" value="updateOneById"> Update One</label>
+                <label><input type="checkbox" name="collections[0].routes" value="updateMany"> Update Many</label>
+                <label><input type="checkbox" name="collections[0].routes" value="deleteById"> Delete One</label>
+                <label><input type="checkbox" name="collections[0].routes" value="deleteMany"> Delete Many</label>
+              </div>
+            </div>
+            
+            <div class="collection-auth-section">
+              <h5>Collection-Specific Auth (Optional)</h5>
+              <div class="form-group checkbox-group">
+                <label>
+                  <input type="checkbox" name="collections[0].hasAuth" class="collection-has-auth">
+                  Override Global Auth Settings
+                </label>
+              </div>
+              
+              <div class="collection-auth-options hidden">
+                <div class="form-group">
+                  <label>Identifier Key</label>
+                  <input type="text" name="collections[0].authIdentifiantKey" value="email" placeholder="e.g., email, username">
+                </div>
+                <div class="form-group">
+                  <label>Password Key</label>
+                  <input type="text" name="collections[0].authPasswordKey" value="password">
+                </div>
+                
+                <div class="form-group">
+                  <label>Auth Routes</label>
+                  <div class="checkbox-group-inline">
+                    <label><input type="checkbox" name="collections[0].authRoutes" value="login"> Login</label>
+                    <label><input type="checkbox" name="collections[0].authRoutes" value="register"> Register</label>
+                    <label><input type="checkbox" name="collections[0].authRoutes" value="refreshToken"> Refresh Token</label>
+                    <label><input type="checkbox" name="collections[0].authRoutes" value="getUserByToken"> Get User</label>
+                  </div>
+                </div>
+                
+                <div class="form-group">
+                  <label>Protected Routes</label>
+                  <div class="checkbox-group-inline">
+                    <label><input type="checkbox" name="collections[0].protectedRoutes" value="getAll"> Get All</label>
+                    <label><input type="checkbox" name="collections[0].protectedRoutes" value="getOneById"> Get One</label>
+                    <label><input type="checkbox" name="collections[0].protectedRoutes" value="search"> Search</label>
+                    <label><input type="checkbox" name="collections[0].protectedRoutes" value="addOne"> Add One</label>
+                    <label><input type="checkbox" name="collections[0].protectedRoutes" value="addMany"> Add Many</label>
+                    <label><input type="checkbox" name="collections[0].protectedRoutes" value="updateOneById"> Update One</label>
+                    <label><input type="checkbox" name="collections[0].protectedRoutes" value="updateMany"> Update Many</label>
+                    <label><input type="checkbox" name="collections[0].protectedRoutes" value="deleteById"> Delete One</label>
+                    <label><input type="checkbox" name="collections[0].protectedRoutes" value="deleteMany"> Delete Many</label>
+                  </div>
+                </div>
+                
+                <div class="form-group checkbox-group">
+                  <label>
+                    <input type="checkbox" name="collections[0].allProtected">
+                    All Routes Protected
+                  </label>
+                </div>
+                
+                <h5>Collection Access Control</h5>
+                <div class="form-group checkbox-group">
+                  <label>
+                    <input type="checkbox" name="collections[0].hasCollectionAccess">
+                    Enable Collection-Based Access
+                  </label>
+                </div>
+                
+                <div class="collection-access-options hidden">
+                  <div class="form-group checkbox-group">
+                    <label>
+                      <input type="checkbox" name="collections[0].accessDefault" checked>
+                      Default Access (allow by default)
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <button type="button" class="btn-secondary" id="addCollectionBtn">Add Collection</button>
+      </div>
+
+      <div class="tab-content" id="server">
+        <h3>Server Options</h3>
+        <div class="form-group">
+          <label for="serverPort">Port</label>
+          <input type="number" id="serverPort" name="serverPort" value="3000">
+        </div>
+
+        <div class="form-group checkbox-group">
+          <label>
+            <input type="checkbox" id="corsEnabled" name="corsEnabled" checked>
+            Enable CORS
+          </label>
+        </div>
+
+        <div id="corsOptions">
+          <div class="form-group">
+            <label for="corsOrigin">Allowed Origin</label>
+            <input type="text" id="corsOrigin" name="corsOrigin" value="*" placeholder="* or http://localhost:3000">
+          </div>
+          <div class="form-group">
+            <label for="corsMethods">Allowed Methods (comma-separated)</label>
+            <input type="text" id="corsMethods" name="corsMethods" value="GET, POST, PUT, DELETE, OPTIONS">
+          </div>
+          <div class="form-group checkbox-group">
+            <label>
+              <input type="checkbox" id="corsCredentials" name="corsCredentials" checked>
+              Allow Credentials
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div class="tab-content" id="auth">
+        <div class="form-group checkbox-group">
+          <label>
+            <input type="checkbox" id="enableAuth" name="enableAuth" checked>
+            Enable Authentication
+          </label>
+        </div>
+
+        <div id="authOptions">
+          <div class="form-group">
+            <label for="authIdentifiantKey">Identifier Key (field name for username/email)</label>
+            <input type="text" id="authIdentifiantKey" name="authIdentifiantKey" value="email">
+          </div>
+          <div class="form-group">
+            <label for="authPasswordKey">Password Key</label>
+            <input type="text" id="authPasswordKey" name="authPasswordKey" value="password">
+          </div>
+
+          <div class="form-group">
+            <label>Auth Routes</label>
+            <div class="checkbox-group-inline">
+              <label><input type="checkbox" name="authRoutes" value="login" checked> Login</label>
+              <label><input type="checkbox" name="authRoutes" value="register" checked> Register</label>
+              <label><input type="checkbox" name="authRoutes" value="refreshToken"> Refresh Token</label>
+              <label><input type="checkbox" name="authRoutes" value="getUserByToken" checked> Get User</label>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Protected Routes</label>
+            <div class="checkbox-group-inline">
+              <label><input type="checkbox" name="authProtectedRoutes" value="getAll" checked> Get All</label>
+              <label><input type="checkbox" name="authProtectedRoutes" value="getOneById" checked> Get One</label>
+              <label><input type="checkbox" name="authProtectedRoutes" value="search" checked> Search</label>
+              <label><input type="checkbox" name="authProtectedRoutes" value="addOne" checked> Add One</label>
+              <label><input type="checkbox" name="authProtectedRoutes" value="addMany" checked> Add Many</label>
+              <label><input type="checkbox" name="authProtectedRoutes" value="updateOneById" checked> Update One</label>
+              <label><input type="checkbox" name="authProtectedRoutes" value="updateMany" checked> Update Many</label>
+              <label><input type="checkbox" name="authProtectedRoutes" value="deleteById" checked> Delete One</label>
+              <label><input type="checkbox" name="authProtectedRoutes" value="deleteMany" checked> Delete Many</label>
+            </div>
+          </div>
+
+          <h4>JWT Settings</h4>
+          <div class="form-group">
+            <label for="authSecret">JWT Secret</label>
+            <input type="text" id="authSecret" name="authSecret" value="your-secret-key-change-me">
+          </div>
+          <div class="form-group">
+            <label for="authTokenFrom">Token From</label>
+            <select id="authTokenFrom" name="authTokenFrom">
+              <option value="header">Header</option>
+              <option value="query">Query Parameter</option>
+              <option value="cookie">Cookie</option>
+              <option value="body">Body</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="authHeaderName">Header Name</label>
+            <input type="text" id="authHeaderName" name="authHeaderName" value="Authorization">
+          </div>
+          
+          <div id="tokenFromOptions">
+            <div id="queryOptions" class="hidden">
+              <div class="form-group">
+                <label for="authQueryParam">Query Parameter Name</label>
+                <input type="text" id="authQueryParam" name="authQueryParam" value="token">
+              </div>
+            </div>
+            <div id="cookieOptions" class="hidden">
+              <div class="form-group">
+                <label for="authCookieName">Cookie Name</label>
+                <input type="text" id="authCookieName" name="authCookieName" value="token">
+              </div>
+            </div>
+            <div id="bodyOptions" class="hidden">
+              <div class="form-group">
+                <label for="authBodyField">Body Field Name</label>
+                <input type="text" id="authBodyField" name="authBodyField" value="token">
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group checkbox-group">
+            <label>
+              <input type="checkbox" id="authPassthrough" name="authPassthrough">
+              Passthrough (allow requests without token)
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div class="tab-content" id="routes">
+        <h3>Custom Routes</h3>
+        <p class="help-text">Add custom routes that are not tied to collections</p>
+        
+        <div id="customRoutes">
+          <div class="custom-route" data-index="0">
+            <div class="form-row">
+              <div class="form-group">
+                <label>Method</label>
+                <select name="customRoutes[0].method">
+                  <option value="GET">GET</option>
+                  <option value="POST">POST</option>
+                  <option value="PUT">PUT</option>
+                  <option value="DELETE">DELETE</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Path</label>
+                <input type="text" name="customRoutes[0].path" placeholder="/api/example">
+              </div>
+              <div class="form-group checkbox-group">
+                <label>
+                  <input type="checkbox" name="customRoutes[0].isProtected">
+                  Protected
+                </label>
+              </div>
+              <button type="button" class="btn-remove" onclick="removeRoute(this)">Remove</button>
+            </div>
+          </div>
+        </div>
+        
+        <button type="button" class="btn-secondary" id="addRouteBtn">Add Custom Route</button>
+      </div>
+
+      <div class="tab-content" id="preview">
+        <h3>Generated Configuration</h3>
+        <pre id="configOutput">// Click "Generate Preview" to see the configuration</pre>
+        
+        <div class="form-group">
+          <label for="filename">Output Filename</label>
+          <input type="text" id="filename" name="filename" value="server.js" placeholder="server.js">
+        </div>
+
+        <div class="button-group">
+          <button type="button" class="btn-primary" id="generateBtn">Generate Preview</button>
+          <button type="button" class="btn-success" id="saveBtn">Save to File</button>
+          <button type="button" class="btn-secondary" id="copyBtn">Copy to Clipboard</button>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
