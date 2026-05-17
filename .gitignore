@@ -1,0 +1,6 @@
+node_modules/
+.env
+package-lock.json
+commit-message.txt
+.npmrc
+.refresh-tokens.json

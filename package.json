@@ -1,0 +1,57 @@
+{
+  "name": "@el-zazo/server-creator",
+  "version": "1.0.0",
+  "description": "Automated server creation with CRUD operations",
+  "keywords": [
+    "express",
+    "api",
+    "rest",
+    "crud",
+    "mongodb",
+    "mysql",
+    "server",
+    "generator",
+    "authentication",
+    "jwt"
+  ],
+  "files": [
+    "index.js",
+    "src/",
+    "LICENSE",
+    "README.md"
+  ],
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "author": "el-zazo",
+  "license": "MIT",
+  "dependencies": {
+    "bcrypt": "^6.0.0",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
+    "express-rate-limit": "^7.5.0",
+    "helmet": "^8.0.0",
+    "joi": "^17.13.3",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.15.1",
+    "mysql2": "^3.9.2",
+    "pluralize": "^8.0.0",
+    "sequelize": "^6.37.7"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.10"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/el-zazo/npm-package--server-creator.git"
+  },
+  "publishConfig": {
+    "@el-zazo:registry": "https://npm.pkg.github.com"
+  }
+}
