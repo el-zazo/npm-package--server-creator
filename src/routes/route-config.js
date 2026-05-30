@@ -3,6 +3,7 @@
  */
 
 const { ROUTES, COLLECTION_ACCESS } = require("../utils/constants");
+const { logger } = require("../utils/logger");
 
 /**
  * Get route configuration (HTTP method and path) for a given route type
@@ -16,7 +17,7 @@ function getRouteConfig(routeName) {
   }
 
   // Default configuration if route not found
-  console.warn(`Unknown route type: ${routeName}, defaulting to GET /`);
+  logger("warn", "Unknown route type, defaulting to GET /", { routeName });
   return { method: "get", path: "/" };
 }
 

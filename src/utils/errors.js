@@ -3,6 +3,7 @@
  */
 
 const { HTTP_STATUS } = require("./constants");
+const { logger } = require("./logger");
 
 /**
  * Base error class for all custom errors
@@ -135,7 +136,7 @@ class DatabaseError extends AppError {
  * @param {Function} next - Express next function
  */
 const errorHandler = (err, req, res, next) => {
-  console.error(`[ERROR] ${err.name}: ${err.message}`);
+  logger("error", "Unhandled error", { name: err.name, message: err.message });
 
   // if (err.stack) {
   //   console.error(err.stack);
@@ -164,8 +165,10 @@ const errorHandler = (err, req, res, next) => {
     return res.status(validationError.statusCode).json(validationError.toJSON());
   }
 
-  // Handle mongoose validation errors
-  if (err.name === "ValidationError") {
+  // Handle mongoose validation errors (from Mongoose, not our custom ValidationError)
+  // Check instanceof to distinguish from our own ValidationError class,
+  // since both share the same `name` property.
+  if (err.name === "ValidationError" && !(err instanceof AppError)) {
     const validationError = new ValidationError("Validation failed", {
       errors: Object.keys(err.errors).reduce((acc, key) => {
         acc[key] = err.errors[key].message;
@@ -177,7 +180,7 @@ const errorHandler = (err, req, res, next) => {
 
   // Handle mongoose cast errors (invalid ID)
   if (err.name === "CastError") {
-    console.log(err.path, err.value);
+    logger("debug", "Cast error", { path: err.path, value: err.value });
     const validationError = new ValidationError("Invalid ID format", {
       path: err.path,
       value: err.value,
@@ -214,39 +217,6 @@ const errorHandler = (err, req, res, next) => {
   return res.status(serverError.statusCode).json(serverError.toJSON());
 };
 
-/**
- * Logger function for different severity levels
- * @param {String} level - Log level (error, warn, info, debug)
- * @param {String} message - Log message
- * @param {Object} data - Additional log data
- */
-const logger = (level, message, data = {}) => {
-  const timestamp = new Date().toISOString();
-  const logEntry = {
-    timestamp,
-    level,
-    message,
-    ...data,
-  };
-
-  switch (level) {
-    case "error":
-      console.error(JSON.stringify(logEntry));
-      break;
-    case "warn":
-      console.warn(JSON.stringify(logEntry));
-      break;
-    case "info":
-      console.info(JSON.stringify(logEntry));
-      break;
-    case "debug":
-      console.debug(JSON.stringify(logEntry));
-      break;
-    default:
-      console.log(JSON.stringify(logEntry));
-  }
-};
-
 module.exports = {
   AppError,
   AuthenticationError,
@@ -259,5 +229,4 @@ module.exports = {
   RateLimitError,
   DatabaseError,
   errorHandler,
-  logger,
 };

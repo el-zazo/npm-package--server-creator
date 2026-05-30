@@ -16,6 +16,7 @@ const { ValidationError, AccessDeniedError } = require("./utils/errors");
 const { authMiddleware } = require("./middleware/auth");
 const { loggerMiddleware } = require("./middleware/logger");
 const { hasCollectionAccess } = require("./routes/route-config");
+const { logger, configureLogger } = require("./utils/logger");
 
 /**
  * Deep clone router options while preserving function references and special types.
@@ -113,6 +114,9 @@ class DB {
    * @param {Object} options.serverOptions - Server options
    * @param {number} options.serverOptions.port - Port for the server to listen on
    * @param {Object} options.serverOptions.corsOptions - CORS configuration options (passed to Server instance)
+   * @param {Object} [options.logs] - Logger configuration
+   * @param {boolean} [options.logs.enabled=true] - Master switch: false silences ALL log output
+   * @param {string}  [options.logs.level="debug"] - Minimum log level: "debug" | "info" | "warn" | "error"
    */
   constructor(options = {}) {
     // Set database type (mongodb or mysql)
@@ -129,6 +133,9 @@ class DB {
 
     this.collections = options.collections || {};
     this.globalRouterOptions = options?.globalRouterOptions || {};
+
+    // Configure logger from options
+    if (options.logs) configureLogger(options.logs);
 
     // Store custom routes that aren't tied to collections
     this.otherRoutes = options.otherRoutes || [];
@@ -247,7 +254,7 @@ class DB {
         routers: this.routers,
       };
     } catch (error) {
-      console.error("Error preparing collections:", error);
+      logger("error", "Failed to prepare collections", { error: error.message });
       throw new Error(`Failed to prepare collections: ${error.message}`);
     }
   }
@@ -376,7 +383,7 @@ class DB {
       // Start server
       return this.server.start(callback);
     } catch (error) {
-      console.error("Error starting server:", error);
+      logger("error", "Failed to start server", { error: error.message });
       throw new Error(`Failed to start server: ${error.message}`);
     }
   }

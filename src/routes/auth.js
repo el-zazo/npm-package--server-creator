@@ -4,10 +4,12 @@
 const crypto = require("crypto");
 const path = require("path");
 const fs = require("fs");
+const fsPromises = require("fs/promises");
 const { verifyPassword, hashPassword } = require("../utils/password");
 const { generateToken, verifyToken } = require("../utils/token");
 const { AUTH, ERROR_MESSAGES, HTTP_STATUS } = require("../utils/constants");
 const { ValidationError, AuthenticationError, ConflictError, AppError, logger } = require("../utils/errors");
+const { logger: tokenStoreLogger } = require("../utils/logger");
 const jwt = require("jsonwebtoken");
 const { sanitizeDocument } = require("./crud");
 
@@ -21,18 +23,36 @@ const loadStore = () => {
       const data = JSON.parse(fs.readFileSync(TOKEN_STORE_PATH, "utf8"));
       return new Map(Object.entries(data));
     }
-  } catch {
-    // If file is corrupted, start fresh
+  } catch (error) {
+    tokenStoreLogger("warn", "TokenStore: failed to load, starting fresh", { error: error.message });
   }
   return new Map();
 };
 
+// Debounced async write to prevent blocking the event loop and
+// avoid race conditions from concurrent writes.
+let saveTimeout = null;
 const saveStore = (store) => {
+  if (saveTimeout) clearTimeout(saveTimeout);
+  saveTimeout = setTimeout(async () => {
+    try {
+      const data = Object.fromEntries(store);
+      await fsPromises.writeFile(TOKEN_STORE_PATH, JSON.stringify(data, null, 2), "utf8");
+    } catch (error) {
+      tokenStoreLogger("error", "TokenStore: failed to persist", { error: error.message });
+    }
+  }, 1000);
+};
+
+/**
+ * Synchronous save for shutdown — flushes pending debounced writes immediately.
+ */
+const saveStoreSync = (store) => {
   try {
     const data = Object.fromEntries(store);
-    fs.writeFileSync(TOKEN_STORE_PATH, JSON.stringify(data), "utf8");
-  } catch {
-    // Silently fail — token store is best-effort
+    fs.writeFileSync(TOKEN_STORE_PATH, JSON.stringify(data, null, 2), "utf8");
+  } catch (error) {
+    tokenStoreLogger("error", "TokenStore: failed to persist (sync)", { error: error.message });
   }
 };
 
@@ -51,17 +71,21 @@ const storeDelete = (jti) => {
 
 const storeHas = (jti) => refreshTokenStore.has(jti);
 
-// Clean up expired refresh tokens every 10 minutes
+// Clean up expired refresh tokens every 10 minutes.
 // Assign to variable and call .unref() so the interval does NOT keep
 // the Node.js process alive when the event loop is otherwise empty.
 // Without .unref(), this interval prevents graceful shutdown.
 const cleanupInterval = setInterval(() => {
   const now = Date.now();
+  let expired = 0;
   for (const [jti, entry] of refreshTokenStore) {
     if (now > entry.expiresAt) {
-      storeDelete(jti);
+      refreshTokenStore.delete(jti);
+      expired++;
     }
   }
+  // Only persist once if tokens were actually removed (debounced via saveStore)
+  if (expired > 0) saveStore(refreshTokenStore);
 }, 10 * 60 * 1000);
 cleanupInterval.unref();
 
@@ -414,4 +438,5 @@ module.exports = {
   register,
   refreshToken,
   getUserByToken,
+  saveStoreSync,
 };

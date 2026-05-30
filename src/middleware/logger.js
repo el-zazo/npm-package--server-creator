@@ -1,5 +1,7 @@
+const { logger } = require("../utils/logger");
+
 function loggerMiddleware(req, res, next) {
-  console.log(`\n\n${req.method} - ${req.route?.path || "unknown"} - ${req.originalUrl}\n\n`);
+  logger("info", "Request", { method: req.method, path: req.route?.path || "unknown", url: req.originalUrl });
   next();
 }
 

@@ -87,7 +87,7 @@ const ipStrictLimiter = rateLimit({
       )}`
     ));
   },
-  standardHeaders: true,
+  standardHeaders: "draft-8",
   legacyHeaders: false,
 });
 

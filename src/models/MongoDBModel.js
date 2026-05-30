@@ -1,6 +1,7 @@
 const { model } = require("mongoose");
 const { MODEL } = require("../utils/constants");
 const { DatabaseError, NotFoundError, ValidationError } = require("../utils/errors");
+const { logger } = require("../utils/logger");
 
 /**
  * Allowlist of safe MongoDB query operators that users are permitted to use.
@@ -92,11 +93,11 @@ class MongoDBModel {
     try {
       // Try to get existing model first
       this.model = model(modelName);
-      console.log(`Using existing model: ${modelName}`);
+      logger("debug", "Using existing model", { modelName });
     } catch (error) {
       // Model doesn't exist, create a new one
       this.model = model(modelName, schema);
-      console.log(`Created new model: ${modelName}`);
+      logger("debug", "Created new model", { modelName });
     }
   }
 

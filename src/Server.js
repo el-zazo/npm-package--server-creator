@@ -7,6 +7,7 @@ const cookieParser = require("cookie-parser");
 const helmet = require("helmet");
 const { SERVER } = require("./utils/constants");
 const { errorHandler } = require("./utils/errors");
+const { logger } = require("./utils/logger");
 const { defaultRateLimiter } = require("./middleware/rate-limit");
 
 class Server {
@@ -108,7 +109,7 @@ class Server {
       this.app.use(prefix, router.router);
     }
 
-    console.log(`Added router with prefix: ${prefix}`);
+    logger("info", "Added router", { prefix });
     return this;
   }
 
@@ -118,7 +119,7 @@ class Server {
    * @returns {Object} - HTTP server instance
    */
   start(callback) {
-    console.log(`Starting server with ${this.routers.length} routers on port ${this.port}...`);
+    logger("info", "Starting server", { port: this.port, routers: this.routers.length });
 
     // Add default error handler at the end of middleware chain
     // This ensures it's added after all routes are defined
@@ -128,7 +129,7 @@ class Server {
     }
 
     const server = this.app.listen(this.port, () => {
-      console.log(`Server running at http://localhost:${this.port}`);
+      logger("info", "Server running", { port: this.port });
       if (callback && typeof callback === "function") {
         callback();
       }
@@ -137,10 +138,10 @@ class Server {
     // Handle port already in use error
     server.on("error", (error) => {
       if (error.code === "EADDRINUSE") {
-        console.error(`Port ${this.port} is already in use! Another instance is probably running.`);
+        logger("error", "Port already in use", { port: this.port });
         process.exit(1);
       } else {
-        console.error("Server error:", error);
+        logger("error", "Server error", { error: error.message });
       }
     });
 
@@ -151,16 +152,16 @@ class Server {
       if (isShuttingDown) return;
       isShuttingDown = true;
 
-      console.log(`\nReceived ${signal}. Graceful shutdown started...`);
+      logger("info", "Graceful shutdown started", { signal });
 
       // Stop accepting new connections
       server.close(async () => {
-        console.log("HTTP server closed.");
+        logger("info", "HTTP server closed");
         try {
           if (this.db) await this.db.disconnect();
-          console.log("Database disconnected.");
+          logger("info", "Database disconnected");
         } catch (err) {
-          console.error("Error during shutdown:", err);
+          logger("error", "Error during shutdown", { error: err.message });
         }
         // Delayed exit to allow other cleanup handlers (e.g. logger flush,
         // metric reporters, custom SIGTERM listeners) to finish before
@@ -170,7 +171,7 @@ class Server {
 
       // Force shutdown after 10 seconds if graceful shutdown hangs
       setTimeout(() => {
-        console.error("Forced shutdown after timeout.");
+        logger("error", "Forced shutdown after timeout");
         process.exit(1);
       }, 10000);
     };

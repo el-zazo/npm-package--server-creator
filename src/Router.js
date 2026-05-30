@@ -9,6 +9,7 @@ const routes = require("./routes");
 const { ROUTES, AUTH } = require("./utils/constants");
 const { AccessDeniedError } = require("./utils/errors");
 const { setLenBySpace } = require("./utils/format");
+const { logger } = require("./utils/logger");
 const { loggerMiddleware } = require("./middleware/logger");
 
 class Router {
@@ -109,7 +110,7 @@ class Router {
    * Initialize routes for the model
    */
   initializeRoutes() {
-    console.log(`Initializing routes for model: ${this.model.modelName}`);
+    logger("info", "Initializing routes", { model: this.model.modelName });
 
     // Map route names to their handler functions
     // Pass this router instance as the 5th parameter to provide access to fieldsConfig
@@ -139,7 +140,7 @@ class Router {
         const { method, path } = routes.getRouteConfig(routeName);
 
         // Display route info
-        console.log(`\tCreate route: \t - ${setLenBySpace(routeName, 20)} - ${setLenBySpace(String(method).toUpperCase(), 10)} - ${setLenBySpace(path, 40)}`);
+        logger("info", "Route created", { route: routeName, method: String(method).toUpperCase(), path });
 
         // Determine validation middleware based on route name
         const validationMiddleware = this.getValidationMiddleware(routeName);
@@ -173,7 +174,7 @@ class Router {
       }
     });
 
-    console.log(`Routes initialized for model: ${this.model.modelName}\n\n`);
+    logger("info", "Routes initialized", { model: this.model.modelName });
   }
 
   /**

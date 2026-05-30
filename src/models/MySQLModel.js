@@ -4,6 +4,7 @@
 const { MODEL } = require("../utils/constants");
 const { DatabaseError, NotFoundError, ValidationError } = require("../utils/errors");
 const { normalizeMySQLFilter } = require("../utils");
+const { logger } = require("../utils/logger");
 const { Op } = require("sequelize");
 
 class MySQLModel {
@@ -27,7 +28,7 @@ class MySQLModel {
     this.modelName = modelName;
     this.collectionName = tableName;
     this.cache = options.cache;
-    console.log(`Using MySQL model: ${modelName}`);
+    logger("debug", "Using MySQL model", { modelName });
   }
 
   /**

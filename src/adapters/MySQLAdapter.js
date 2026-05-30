@@ -5,6 +5,7 @@ const { Sequelize, DataTypes } = require("sequelize");
 const DatabaseAdapter = require("./DatabaseAdapter");
 const MySQLModel = require("../models/MySQLModel");
 const { DATABASE } = require("../utils/constants");
+const { logger } = require("../utils/logger");
 
 class MySQLAdapter extends DatabaseAdapter {
   /**
@@ -47,10 +48,10 @@ class MySQLAdapter extends DatabaseAdapter {
       });
 
       await this.sequelize.authenticate();
-      console.log(`Connected to MySQL at ${this.host}:${this.port}/${this.database}`);
+      logger("info", "Connected to MySQL", { host: this.host, port: this.port, database: this.database });
       return this.sequelize;
     } catch (error) {
-      console.error("MySQL connection error:", error);
+      logger("error", "MySQL connection error", { error: error.message });
       throw new Error(`Failed to connect to MySQL: ${error.message}`);
     }
   }
@@ -63,11 +64,11 @@ class MySQLAdapter extends DatabaseAdapter {
     try {
       if (this.sequelize) {
         await this.sequelize.close();
-        console.log("Disconnected from MySQL");
+        logger("info", "Disconnected from MySQL");
         this.sequelize = null;
       }
     } catch (error) {
-      console.error("MySQL disconnection error:", error);
+      logger("error", "MySQL disconnection error", { error: error.message });
       throw new Error(`Failed to disconnect from MySQL: ${error.message}`);
     }
   }
@@ -97,7 +98,7 @@ class MySQLAdapter extends DatabaseAdapter {
         const [results] = await this.sequelize.query("SELECT table_name FROM information_schema.tables WHERE table_schema = ?", { replacements: [this.database] });
         return results.map((result) => result.table_name || result.TABLE_NAME);
       } catch (error) {
-        console.error("Error getting tables:", error);
+        logger("error", "Failed to get tables", { error: error.message });
         throw new Error(`Failed to get tables: ${error.message}`);
       }
     });
@@ -179,7 +180,7 @@ class MySQLAdapter extends DatabaseAdapter {
 
         return new MySQLModel(sequelizeModel, modelName, tableName, { cache: this.cache });
       } catch (error) {
-        console.error(`Error creating model for table ${tableName}:`, error);
+        logger("error", "Failed to create model for table", { table: tableName, error: error.message });
         throw new Error(`Failed to create model for table ${tableName}: ${error.message}`);
       }
     });

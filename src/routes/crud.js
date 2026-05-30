@@ -13,7 +13,13 @@ const NO_PAGINATION_OPTIONS = ["true", "True", "1"];
  * Remove dangerous NoSQL operators that could allow arbitrary code execution
  * or bypass intended logic.
  */
-const DANGEROUS_OPERATORS = ["$where", "$expr", "$function", "$accumulator"];
+const DANGEROUS_OPERATORS = [
+  "$where", "$expr", "$function", "$accumulator",
+  "$regex", "$jsonSchema", "$natural", "$text",
+  "$geoIntersects", "$geoNear", "$near", "$nearSphere",
+  "$search", "$regexMatch", "$all", "$elemMatch",
+  "$options", "$slice", "$meta", "$comment"
+];
 
 const sanitizeNoSQL = (obj) => {
   if (typeof obj !== "object" || obj === null) return obj;
@@ -312,8 +318,8 @@ async function search(req, res, next, model, router) {
       if (sensitiveFields.includes(key.toLowerCase())) delete query[key];
     });
 
-    // Check if no_pagination parameter is set to true
-    const noPagination = req.body.no_pagination === true;
+    // Check if no_pagination parameter is set to true (supports boolean and string representations)
+    const noPagination = req.body.no_pagination === true || ["true", "True", "TRUE", "1"].includes(String(req.body.no_pagination));
 
     const options = {
       sort: sanitizeSortFields(req.body.sort) || {},
@@ -551,7 +557,7 @@ async function deleteById(req, res, next, model, router) {
 /**
  * DELETE /{model}/many - Delete many documents by filter
  */
-async function deleteMany(req, res, next, model) {
+async function deleteMany(req, res, next, model, router) {
   try {
     // Check if filter exists
     if (!req?.body?.filter) {
@@ -570,6 +576,11 @@ async function deleteMany(req, res, next, model) {
     const result = await model.deleteManyByFilter(filter);
 
     logger("debug", "Multiple documents deleted successfully", { count: result.deletedCount, collection: model.modelName });
+
+    // Sanitize deleted documents if present in result (prevents password leaks)
+    if (Array.isArray(result.data)) {
+      result.data = result.data.map((doc) => sanitizeDocument(doc, [router?.auth?.keys?.passwordKey].filter(Boolean)));
+    }
 
     res.json({
       success: true,

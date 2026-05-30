@@ -5,6 +5,7 @@ const mongoose = require("mongoose");
 const DatabaseAdapter = require("./DatabaseAdapter");
 const MongoDBModel = require("../models/MongoDBModel");
 const { DATABASE } = require("../utils/constants");
+const { logger } = require("../utils/logger");
 
 class MongoDBAdapter extends DatabaseAdapter {
   /**
@@ -35,10 +36,10 @@ class MongoDBAdapter extends DatabaseAdapter {
       mongoose.set("strictQuery", true);
 
       this.connection = await mongoose.connect(this.uri, this.connectionOptions);
-      console.log(`Connected to MongoDB at ${this.uri}`);
+      logger("info", "Connected to MongoDB", { uri: this.uri.replace(/\/\/.*@/, "//***@") });
       return this.connection;
     } catch (error) {
-      console.error("MongoDB connection error:", error);
+      logger("error", "MongoDB connection error", { error: error.message });
       throw new Error(`Failed to connect to MongoDB: ${error.message}`);
     }
   }
@@ -50,10 +51,10 @@ class MongoDBAdapter extends DatabaseAdapter {
   async disconnect() {
     try {
       await mongoose.disconnect();
-      console.log("Disconnected from MongoDB");
+      logger("info", "Disconnected from MongoDB");
       this.connection = null;
     } catch (error) {
-      console.error("MongoDB disconnection error:", error);
+      logger("error", "MongoDB disconnection error", { error: error.message });
       throw new Error(`Failed to disconnect from MongoDB: ${error.message}`);
     }
   }
@@ -84,7 +85,7 @@ class MongoDBAdapter extends DatabaseAdapter {
         const collections = await db.listCollections().toArray();
         return collections.map((collection) => collection.name);
       } catch (error) {
-        console.error("Error getting collections:", error);
+        logger("error", "Failed to get collections", { error: error.message });
         throw new Error(`Failed to get collections: ${error.message}`);
       }
     });
@@ -113,7 +114,7 @@ class MongoDBAdapter extends DatabaseAdapter {
         const modelName = collectionOptions?.modelName || this.formatModelName(collectionName);
         return new MongoDBModel(schema, modelName, collectionName, { cache: this.cache });
       } catch (error) {
-        console.error(`Error creating model for collection ${collectionName}:`, error);
+        logger("error", "Failed to create model for collection", { collection: collectionName, error: error.message });
         throw new Error(`Failed to create model for collection ${collectionName}: ${error.message}`);
       }
     });
