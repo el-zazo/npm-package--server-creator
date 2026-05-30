@@ -58,7 +58,7 @@ The IP strict rate limiter (`ipStrictLimiter`) is an **IP-only** rate limiter ap
 | `windowMs`        | `60000` (1 minute)                                                             |
 | `max`             | `15` requests per window (= `STRICT_MAX_REQUESTS × 3`)                         |
 | `keyGenerator`    | `req.ip \|\| req.socket?.remoteAddress \|\| "unknown"`                         |
-| `standardHeaders` | `true` (boolean)                                                               |
+| `standardHeaders` | `"draft-8"` (RateLimit header)                                                |
 | `legacyHeaders`   | `false`                                                                        |
 
 **Custom handler message:** `"Too many attempts from this IP. Please try again after 1 minute"`
@@ -202,10 +202,10 @@ RateLimit: limit=100, remaining=95, reset=1705312200
 | Limiter            | `standardHeaders` | `legacyHeaders` |
 | ------------------ | ----------------- | --------------- |
 | Default            | `"draft-8"`       | `false`         |
-| IP Strict          | `true`            | `false`         |
+| IP Strict          | `"draft-8"`       | `false`         |
 | Strict per-ident   | `"draft-8"`       | `false`         |
 
-> Legacy headers (`X-RateLimit-Limit`, `X-RateLimit-Remaining`, etc.) are explicitly disabled on all limiters. The `ipStrictLimiter` uses `standardHeaders: true` (boolean) rather than `"draft-8"`, which enables the standard headers using the library's default format.
+> Legacy headers (`X-RateLimit-Limit`, `X-RateLimit-Remaining`, etc.) are explicitly disabled on all limiters. All three limiters use `standardHeaders: "draft-8"`, which enables the standardized `RateLimit` header per the IETF draft-8 specification.
 
 ---
 

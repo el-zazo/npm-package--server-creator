@@ -225,6 +225,33 @@ const db = new DB({
 
 See [collections.<collectionName>](#collectionscollectionname).
 
+### `logs`
+
+- **Type:** `Object`
+- **Default:** `{ enabled: true, level: "debug" }`
+- **Required:** No
+
+Logger configuration. Controls the built-in structured logger that outputs JSON-formatted log entries to the console.
+
+| Option     | Type      | Default    | Description                                                        |
+| ---------- | --------- | ---------- | ------------------------------------------------------------------ |
+| `enabled`  | `Boolean` | `true`     | Master switch. `false` silences ALL log output.                    |
+| `level`    | `String`  | `"debug"`  | Minimum log level. One of `"debug"`, `"info"`, `"warn"`, `"error"`. |
+
+Log levels (lowest → highest priority): `debug` < `info` < `warn` < `error`. When `level` is set to `"info"`, for example, `debug` messages are suppressed while `info`, `warn`, and `error` messages are printed.
+
+```javascript
+const db = new DB({
+  dbType: "mongodb",
+  adapterConfig: { mongodb: { uri: "mongodb://0.0.0.0:27017/my_app" } },
+  logs: {
+    enabled: true,
+    level: "info",  // suppress debug messages in production
+  },
+  collections: { users: {} },
+});
+```
+
 ### `otherRoutes`
 
 - **Type:** `Array`

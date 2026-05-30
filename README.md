@@ -58,6 +58,10 @@ const db = new DB({
   adapterConfig: {
     mongodb: { uri: "mongodb://localhost:27017/my_database" },
   },
+  collections: {
+    users: {},
+    posts: {},
+  },
   serverOptions: { port: 3000 },
 });
 

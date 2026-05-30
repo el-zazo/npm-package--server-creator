@@ -1,6 +1,6 @@
 {
   "name": "@el-zazo/server-creator",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "Automated server creation with CRUD operations",
   "keywords": [
     "express",
